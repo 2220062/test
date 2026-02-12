@@ -1,0 +1,265 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>わが家の在宅ボード</title>
+    <style>
+        :root { 
+            --bg-color: #f8f9fa; 
+            --card-home: #28a745; 
+            --card-away: #dc3545; 
+            --card-sos: #ff0000;
+        }
+        body { font-family: sans-serif; background-color: var(--bg-color); display: flex; justify-content: center; padding: 20px; margin: 0; }
+        .container { width: 100%; max-width: 450px; position: relative; }
+        
+        #digital-clock { position: absolute; top: -5px; right: 0; text-align: right; font-family: monospace; font-weight: bold; }
+        #clock-time { font-size: 1.3rem; }
+        h1 { font-size: 1.2rem; margin: 0 0 20px 0; }
+
+        .safety-memo { background: #333; color: #fff; padding: 10px; border-radius: 10px; margin-bottom: 15px; font-size: 0.8rem; text-align: center; }
+        .safety-memo span { text-decoration: underline; cursor: pointer; color: #ffd700; }
+
+        .setup-container { background: #fff; border-radius: 10px; margin-bottom: 15px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); overflow: hidden; }
+        .setup-toggle { width: 100%; padding: 8px; border: none; background: #eaedef; font-size: 0.8rem; cursor: pointer; }
+        .setup-content { display: none; padding: 12px; }
+        .add-member-btn { width: 100%; padding: 8px; margin-bottom: 12px; background-color: #007bff; color: white; border: none; border-radius: 6px; font-weight: bold; }
+
+        .input-row { display: flex; gap: 6px; margin-bottom: 8px; align-items: center; border-bottom: 1px solid #eee; padding-bottom: 8px; }
+        .name-input { width: 70px; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+        .msg-input { flex: 1; padding: 6px; border: 1px solid #ddd; border-radius: 4px; font-size: 0.85rem; }
+
+        .member-grid { display: flex; flex-direction: column; gap: 10px; margin-bottom: 20px; }
+        .member-card { 
+            border: none; border-radius: 15px; padding: 15px; color: white; cursor: pointer; 
+            display: flex; justify-content: space-between; align-items: center; 
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1); transition: 0.2s;
+        }
+        
+        .home { background-color: var(--card-home); }
+        .away { background-color: var(--card-away); }
+        
+        .sos-active { 
+            background-color: var(--card-sos) !important; 
+            border: 4px solid white !important;
+            box-sizing: border-box;
+            animation: urgent-blink 0.6s infinite; 
+            transform: scale(1.02);
+        }
+        @keyframes urgent-blink { 
+            0%, 100% { background-color: #ff0000; } 
+            50% { background-color: #7a0000; } 
+        }
+
+        .member-info { display: flex; align-items: center; gap: 12px; flex: 1; }
+        .member-name { font-size: 1.1rem; font-weight: bold; }
+        .member-msg { font-size: 0.8rem; opacity: 0.9; margin-top: 2px; }
+        
+        .card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+        .status-badge { background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+        
+        .sos-btn { 
+            background: rgba(0,0,0,0.3); border: 1px solid rgba(255,255,255,0.5); 
+            color: white; padding: 5px 10px; border-radius: 6px; font-size: 0.65rem; font-weight: bold; 
+        }
+        .sos-btn.active { background: #fff; color: red; border: none; }
+        .update-time { font-size: 0.65rem; opacity: 0.7; font-family: monospace; }
+
+        .history-container { background: #fff; border-radius: 10px; overflow: hidden; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+        .history-toggle { width: 100%; padding: 10px; border: none; background: #f1f3f5; font-size: 0.8rem; cursor: pointer; display: flex; justify-content: space-between; }
+        .history-content { display: none; padding: 10px; border-top: 1px solid #eee; }
+        #history-list { list-style: none; padding: 0; margin: 0; max-height: 120px; overflow-y: auto; font-size: 0.8rem; }
+        .history-item { border-bottom: 1px solid #f8f9fa; padding: 4px 0; display: flex; gap: 8px; }
+
+        /* --- 絵文字パネルの修正ポイント --- */
+        .emoji-panel { 
+            display: none; 
+            position: fixed; 
+            top: 50%; left: 50%; 
+            transform: translate(-50%, -50%); 
+            background: white; 
+            padding: 20px; 
+            border-radius: 25px; 
+            box-shadow: 0 15px 40px rgba(0,0,0,0.3); 
+            z-index: 100; 
+            
+            /* 1行に4つ、ゆったり並べる設定 */
+            display: none;
+            grid-template-columns: repeat(4, 1fr); 
+            gap: 15px; 
+            width: 80%;       /* スマホの横幅に合わせる */
+            max-width: 300px; /* 広がりすぎない上限 */
+            box-sizing: border-box; 
+        }
+        .emoji-panel span { 
+            font-size: 2rem; 
+            cursor: pointer; 
+            padding: 10px; 
+            text-align: center; 
+            display: flex; 
+            justify-content: center; 
+            align-items: center;
+        }
+        .emoji-panel span:hover { background: #f8f9fa; border-radius: 15px; }
+        .overlay { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0,0,0,0.4); z-index: 90; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <div id="digital-clock">
+        <div id="clock-date"></div>
+        <div id="clock-time"></div>
+    </div>
+    <h1>🏠 わが家のボード</h1>
+
+    <div class="safety-memo">
+        📍 避難先: <span id="memo-display" onclick="editMemo()">設定なし（タップして編集）</span>
+    </div>
+
+    <div class="setup-container">
+        <button class="setup-toggle" onclick="toggleSection('setup-content')">⚙️ 家族の登録・編集</button>
+        <div id="setup-content" class="setup-content">
+            <button class="add-member-btn" onclick="addMember()">＋ 新しい家族を追加</button>
+            <div id="setup-inputs"></div>
+        </div>
+    </div>
+
+    <div id="member-board" class="member-grid"></div>
+
+    <div class="history-container">
+        <button class="history-toggle" onclick="toggleSection('history-content')"><span>📜 履歴</span><span>▼</span></button>
+        <div id="history-content" class="history-content"><ul id="history-list"></ul></div>
+    </div>
+</div>
+
+<div id="overlay" class="overlay" onclick="closePanel()"></div>
+<div id="emoji-panel" class="emoji-panel"></div>
+
+<script>
+    const emojis = [
+        "👤", "👨", "👩", "👧", "👦", "👶", "👵", "👴", 
+        "🐶", "🐱", "🐰", "🧸", "❤️", "🎀", "✨", "🌸", 
+        "🍀", "🌟", "🍓", "🍉"
+    ];
+    
+    let members = JSON.parse(localStorage.getItem('familyMembers')) || [];
+    let activeId = null;
+
+    function init() {
+        setInterval(updateClock, 1000); updateClock();
+        checkDailyReset();
+        const panel = document.getElementById('emoji-panel');
+        emojis.forEach(e => {
+            const span = document.createElement('span'); span.textContent = e;
+            span.onclick = () => { members[activeId].icon = e; saveAndRender(); closePanel(); };
+            panel.appendChild(span);
+        });
+        const savedMemo = localStorage.getItem('evacMemo');
+        if(savedMemo) document.getElementById('memo-display').textContent = savedMemo;
+        renderSetup(); renderBoard(); renderHistory();
+    }
+
+    function updateClock() {
+        const now = new Date();
+        document.getElementById('clock-date').textContent = now.toLocaleDateString();
+        document.getElementById('clock-time').textContent = now.toLocaleTimeString('ja-JP', {hour12:false});
+    }
+
+    function editMemo() {
+        const newMemo = prompt("避難先などを入力してください", document.getElementById('memo-display').textContent);
+        if (newMemo) { document.getElementById('memo-display').textContent = newMemo; localStorage.setItem('evacMemo', newMemo); }
+    }
+
+    function renderBoard() {
+        const board = document.getElementById('member-board'); board.innerHTML = '';
+        members.forEach((m, i) => {
+            if (!m.name.trim()) return;
+            const card = document.createElement('div');
+            card.className = `member-card ${m.isSos ? 'sos-active' : m.status}`;
+            card.onclick = () => toggleStatus(i);
+            
+            card.innerHTML = `
+                <div class="member-info">
+                    <span style="font-size:2rem;">${m.icon}</span>
+                    <div class="member-text">
+                        <span class="member-name">${m.name}</span>
+                        ${m.msg ? `<span class="member-msg">💬 ${m.msg}</span>` : ''}
+                    </div>
+                </div>
+                <div class="card-right">
+                    <span class="status-badge">${m.isSos ? '🆘SOS' : (m.status === 'home' ? '在宅中' : '外出中')}</span>
+                    <button class="sos-btn ${m.isSos ? 'active' : ''}" onclick="toggleSos(event, ${i})">
+                        ${m.isSos ? '解除' : 'SOS'}
+                    </button>
+                    <span class="update-time">${m.time}</span>
+                </div>
+            `;
+            board.appendChild(card);
+        });
+    }
+
+    function toggleStatus(i) {
+        if (members[i].isSos) return;
+        members[i].status = (members[i].status === 'home') ? 'away' : 'home';
+        members[i].time = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        addLog(members[i].name, members[i].status, members[i].time);
+        saveAndRender();
+    }
+
+    function toggleSos(event, i) {
+        event.stopPropagation();
+        members[i].isSos = !members[i].isSos;
+        const nowTime = new Date().toLocaleTimeString([], {hour:'2-digit', minute:'2-digit'});
+        addLog(members[i].name, members[i].isSos ? "🆘SOS発信" : "SOS解除", nowTime);
+        saveAndRender();
+    }
+
+    function renderSetup() {
+        const container = document.getElementById('setup-inputs'); container.innerHTML = '';
+        members.forEach((m, i) => {
+            const row = document.createElement('div'); row.className = 'input-row';
+            row.innerHTML = `
+                <div style="cursor:pointer; font-size:1.4rem; border:1px solid #ddd; padding:4px; border-radius:8px; width:40px; text-align:center;" onclick="activeId=${i}; document.getElementById('emoji-panel').style.display='grid'; document.getElementById('overlay').style.display='block';">${m.icon}</div>
+                <input type="text" class="name-input" value="${m.name}" oninput="members[${i}].name=this.value; saveAndRender();" placeholder="名前">
+                <input type="text" class="msg-input" value="${m.msg}" oninput="members[${i}].msg=this.value; saveAndRender();" placeholder="一言">
+                <button style="border:none; background:none; color:#ccc; font-size:1.2rem;" onclick="if(confirm('削除しますか？')){members.splice(${i},1); saveAndRender();}">×</button>
+            `;
+            container.appendChild(row);
+        });
+    }
+
+    function addMember() { members.push({ name: "", icon: "👤", msg: "", status: "away", time: "--:--", isSos: false }); renderSetup(); }
+    function saveAndRender() { localStorage.setItem('familyMembers', JSON.stringify(members)); renderBoard(); }
+    function closePanel() { document.getElementById('emoji-panel').style.display = 'none'; document.getElementById('overlay').style.display = 'none'; }
+    function toggleSection(id) { const el = document.getElementById(id); el.style.display = (el.style.display === 'block') ? 'none' : 'block'; }
+
+    function addLog(name, status, time) {
+        const history = JSON.parse(localStorage.getItem('history') || '[]');
+        let text = status === 'home' ? '帰宅' : (status === 'away' ? '外出' : status);
+        history.unshift({ time, text: `${name}: ${text}` });
+        localStorage.setItem('history', JSON.stringify(history.slice(0, 15)));
+        renderHistory();
+    }
+
+    function renderHistory() {
+        const list = document.getElementById('history-list');
+        const history = JSON.parse(localStorage.getItem('history') || '[]');
+        list.innerHTML = history.map(h => `<li class="history-item"><span style="color:#aaa;">${h.time}</span><span>${h.text}</span></li>`).join('');
+    }
+
+    function checkDailyReset() {
+        const now = new Date();
+        const last = localStorage.getItem('lastResetDate');
+        if (now.getHours() >= 6 && last !== now.toDateString()) {
+            members.forEach(m => { m.status = "away"; m.msg = ""; m.time = "--:--"; m.isSos = false; });
+            localStorage.setItem('lastResetDate', now.toDateString());
+            saveAndRender();
+        }
+    }
+
+    window.onload = init;
+</script>
+</body>
+</html>

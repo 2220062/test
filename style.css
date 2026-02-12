@@ -1,0 +1,195 @@
+body {
+    font-family: "Helvetica Neue", Arial, "Hiragino Kaku Gothic ProN", "Hiragino Sans", sans-serif;
+    background-color: #f7f9fc;
+    display: flex;
+    justify-content: center;
+    padding: 20px;
+    margin: 0;
+}
+
+.container {
+    width: 100%;
+    max-width: 600px;
+    position: relative;
+}
+
+h1 {
+    text-align: center;
+    color: #333;
+    margin-bottom: 25px;
+    font-size: 1.5rem;
+}
+
+/* 避難先メモ */
+.safety-memo {
+    background: #333;
+    color: #fff;
+    padding: 12px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    font-size: 0.9rem;
+    text-align: center;
+}
+.safety-memo span {
+    text-decoration: underline;
+    cursor: pointer;
+    color: #ffd700;
+}
+
+/* 設定エリア */
+.setup-container {
+    background: #fff;
+    border-radius: 10px;
+    margin-bottom: 20px;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+    overflow: hidden;
+}
+.setup-toggle {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    background: #eaedef;
+    font-size: 0.9rem;
+    cursor: pointer;
+    font-weight: bold;
+}
+.setup-content {
+    display: none;
+    padding: 15px;
+}
+.add-member-btn {
+    width: 100%;
+    padding: 10px;
+    margin-bottom: 15px;
+    background-color: #007bff;
+    color: white;
+    border: none;
+    border-radius: 6px;
+    font-weight: bold;
+    cursor: pointer;
+}
+.input-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 10px;
+    align-items: center;
+    border-bottom: 1px solid #eee;
+    padding-bottom: 10px;
+}
+.name-input { width: 80px; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+.msg-input { flex: 1; padding: 8px; border: 1px solid #ddd; border-radius: 4px; }
+
+/* メンバー表示グリッド */
+.member-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+    gap: 15px;
+    margin-bottom: 25px;
+}
+
+/* カードのデザイン */
+.member-card {
+    border: none;
+    border-radius: 15px;
+    padding: 15px;
+    color: white;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    transition: transform 0.1s, background-color 0.3s;
+}
+.member-card:active { transform: scale(0.98); }
+
+.home { background-color: #28a745; } /* 在宅中（緑） */
+.away { background-color: #dc3545; } /* 外出中（赤） */
+
+/* SOSの激しい点滅 */
+.sos-active {
+    background-color: #ff0000 !important;
+    border: 4px solid white !important;
+    box-sizing: border-box;
+    animation: urgent-blink 0.6s infinite;
+}
+@keyframes urgent-blink {
+    0%, 100% { background-color: #ff0000; }
+    50% { background-color: #7a0000; }
+}
+
+.member-info { display: flex; align-items: center; gap: 12px; }
+.member-name { font-size: 1.2rem; font-weight: bold; }
+.member-msg { font-size: 0.85rem; opacity: 0.9; margin-top: 4px; display: block; }
+
+.card-right { display: flex; flex-direction: column; align-items: flex-end; gap: 8px; }
+.status-badge { background: rgba(0,0,0,0.2); padding: 4px 10px; border-radius: 20px; font-size: 0.8rem; font-weight: bold; }
+
+.sos-btn {
+    background: rgba(0,0,0,0.3);
+    border: 1px solid rgba(255,255,255,0.5);
+    color: white;
+    padding: 5px 12px;
+    border-radius: 6px;
+    font-size: 0.7rem;
+    font-weight: bold;
+    cursor: pointer;
+}
+.sos-btn.active { background: #fff; color: red; border: none; }
+.update-time { font-size: 0.7rem; opacity: 0.8; font-family: monospace; }
+
+/* 履歴エリア */
+.history-container {
+    background: #fff;
+    border-radius: 10px;
+    overflow: hidden;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+}
+.history-toggle {
+    width: 100%;
+    padding: 12px;
+    border: none;
+    background: #f1f3f5;
+    font-size: 0.9rem;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+}
+.history-content { display: none; padding: 15px; border-top: 1px solid #eee; }
+#history-list { list-style: none; padding: 0; margin: 0; max-height: 150px; overflow-y: auto; font-size: 0.85rem; }
+.history-item { border-bottom: 1px solid #f8f9fa; padding: 6px 0; display: flex; gap: 10px; }
+
+/* ★ スイカはみ出し修正済みの絵文字パネル ★ */
+.overlay {
+    display: none;
+    position: fixed;
+    top: 0; left: 0;
+    width: 100%; height: 100%;
+    background: rgba(0,0,0,0.4);
+    z-index: 90;
+}
+.emoji-panel {
+    display: none;
+    position: fixed;
+    top: 50%; left: 50%;
+    transform: translate(-50%, -50%);
+    background: white;
+    padding: 20px;
+    border-radius: 25px;
+    box-shadow: 0 15px 50px rgba(0,0,0,0.3);
+    z-index: 100;
+    grid-template-columns: repeat(4, 1fr); /* 4列に固定 */
+    gap: 12px;
+    width: 280px; /* 幅を広めに固定 */
+    box-sizing: border-box;
+}
+.emoji-panel span {
+    font-size: 2.2rem;
+    cursor: pointer;
+    padding: 8px;
+    text-align: center;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    line-height: 1; /* 余計な行間をカット */
+}
+.emoji-panel span:hover { background: #f0f0f0; border-radius: 15px; }
